@@ -5,7 +5,7 @@ import json
 from geopy.geocoders import Nominatim
 geolocator = Nominatim(user_agent="flask_app_koji")
 
-con = pymysql.connect('localhost', 'root', 'Karelia', 'geo_data')
+con = pymysql.connect('localhost', 'root', '(hidden)', '(hidden)')
 
 '''repetive functions here'''
 
