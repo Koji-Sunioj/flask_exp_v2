@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+{% block content %}
+
+
+<div class="row" style="padding-top: 20px; ">
+{% if social_header %} 
+<div class="card col-3 offset-1"  style="width: 18rem;">
+  <a href="{{ url_for('forum',page=1)}}" style="text-align: center; color:blue; padding-top:20px; margin: 0px; " >Latest social media post</a>
+  <div class="card-body">
+    <h6 class="card-title">{{social_header[0][0]}}</h6>
+    <p class="card-text">{{social_header[0][1]}}.</p>
+    <p class="card-subtitle mb-2 text-muted">{{social_header[0][3]}} on {{social_header[0][2]}} by {{social_header[0][4]}}.</p>
+  </div>
+</div>
+
+<div class="card col-3 offset-1"  style="width: 18rem;">
+  <a href="{{url_for('weather_city',city=summary['home_town'] )}}" style="text-align: center; color:blue; padding-top:20px; margin: 0px;">Current conditions in {{summary['home_town']}} </a>
+  <div class="card-body">
+    <h6 class="card-title">{{summary['temperature']}} {% if summary['wind_chill'] %} C°, feels like {{summary['wind_chill']}} C°.{% endif %}</h5>
+    <p class="card-text">{{summary['summary']}}</p>
+    <p class="card-subtitle mb-2 text-muted">updated on {{summary['forecast_time']}}.</p>
+    
+  </div>
+</div>
+{% endif%}
+{% if next_task %}
+  <div class="card col-3 offset-1"  style="width: 18rem;">
+    <a href="{{url_for('home_calendar',date=now.strftime('%Y-%m'))}}" style="text-align: center; color:blue; padding-top:20px; margin: 0px;">Next thing to do </a>
+    <div class="card-body">
+      <h6 class="card-title">{{next_task[0][2]}}</h5>
+      <p class="card-text">{{next_task[0][3]}}</p>
+      <p class="card-subtitle mb-2 text-muted">{{next_task[0][0].strftime('%b %d, %H:%M')}} to {{next_task[0][1].strftime('%H:%M')}}</p>
+    </div>
+{% endif%}
+</div>
+{% if message  %}
+  <div class="col-4 offset-4" style="margin-top: 20px;">
+    <p class="alert alert-success" role="alert">{{message}}</p>
+  </div>
+{% endif%} 
+
+{% endblock %}  

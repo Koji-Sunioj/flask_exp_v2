@@ -1,0 +1,67 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<body onload="check_photo()"> 
+<div class="row" >
+<div class="card" id="user_profile" >
+   <div class="card-body">
+    
+     <div id="avatar" style="width:100px;height:100px;overflow:hidden;border-radius: 50%; border: solid grey 1px; margin-bottom: 20px;margin-top: 10px;cursor: pointer;">
+        <img class="card-img-top"  src="{{ url_for('static', filename='storage/'+user_profile['username']) }}" onerror="this.src='/static/storage/default_avatar.png'"  >
+     </div> 
+     <h5 class="card-title">{{user_profile['username']}}</h5>
+     <p class="card-text">{{user_profile['hometown']}}</p>
+     <p class="card-text">{{user_profile['email']}}</p>
+     <p class="card-text text-muted">joined: {{user_profile['created']|string|truncate(10, False, '', 0)}}</p>
+   </div>
+ </div>
+ </div>
+{% if avatar_updated %}
+   <div style="width: 70%; margin: auto;" class="alert alert-success" id="update_success">
+      {{avatar_updated}}
+   </div>
+{% endif %} 
+<form method=post enctype=multipart/form-data style="width: 70%; margin: auto; visibility: hidden;"id="send_file" >
+  <input type="file" name="file">
+</form>
+</body>
+<div  id="profile_message" style="display: none; width: 70%; margin: auto;" class="alert alert-warning">
+</div> 
+
+
+<div class="modal fade" id="change_password">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">change password bro</h4>
+      </div>
+      <div class="modal-body">
+        <form name="modal" method="post">
+          <div class="form-group">
+            <label>title</label>
+            <input class="form-control" type="text" placeholder="your shitty title here" name="title">
+          </div>
+          <div class="form-group">
+            <label>post</label>
+            <textarea class="form-control"  rows="3" placeholder="Taking over saturated selfies in Finnish forests" name="post"></textarea>
+            <div class="row">
+              <div class="btn-group col-6" role="group" aria-label="Basic example">
+                <button id="new_post" class="btn btn-primary" style="margin-top: 20px;" type="submit">Submit</button>
+              </div>
+              <div class="btn-group col-6" role="group" aria-label="Basic example">
+                <button id="cancel_post" class="btn btn-primary" style="margin-top: 20px;">Cancel</button> 
+              </div>
+            </div>
+            <div  style="display: none; margin-top: 20px;" id="modal_error" class="alert alert-warning">
+
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %} 

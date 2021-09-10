@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+{% block content %}	
+
+<div class="col-4 offset-4"> 
+	<form action = "http://localhost:5000/weather/"  id="weather_input" method = "post" > 
+		<div class="input-group mb-3" >
+			<span class="input-group-text">City:</span>
+				<input type = "text" name = "city" class="form-control" >
+				<button class="btn btn-primary" type="submit">Submit</button>
+		</div>
+	</form>
+</div>
+
+{% endblock %} 

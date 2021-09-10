@@ -1,0 +1,20 @@
+
+{% extends "layout.html" %}
+{% block content %}
+<body onload="login_page()">
+  <h2 >Login Page</h2>
+   <form  method="POST" class="border" id ='login_form'>
+      <div class="form-group">
+         <input class="form-control" placeholder="username or email" name="email_username">
+         <input class="form-control" type="password" placeholder="password" name="password"style="margin-top: 20px;">
+         <button class="btn btn-primary" style="margin-top: 20px;" type="submit">Log in</button>
+      </div>
+   </form>
+   <div class="col" style="margin-top: 20px; text-align: center;">
+      <a id='create_profile_link' href="{{url_for('create_profile')}}" style="color: white;">Don't have an account? Get registered here.</a> 
+   </div>
+   <br>
+   <div class="alert alert-warning" id="login_error" style="display: none;">
+   </div> 
+</body>
+{% endblock %}  

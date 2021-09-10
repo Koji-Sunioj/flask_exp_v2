@@ -1,0 +1,477 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<style>
+
+form {width: 70%; padding: 20px; margin:auto; background-color:#f5f5f5; margin-top: 20px;}
+::-webkit-scrollbar { 
+  width: 0px!important;
+} 
+
+.dropdown_check{
+  margin-left: 10px;
+  
+}
+
+input[name="days"] {
+  margin-right: 10px;
+}
+
+.btn.btn-link {
+  text-decoration: none;
+}
+.nav-link:focus,.nav-link.active {
+  outline: none !important;
+   box-shadow: none;
+}
+
+
+ button.btn.btn-link.in_edit
+{
+  display: none;padding: 0px;
+} 
+
+.edit_progress {
+  border-color: green
+}
+
+.to_trash {
+  border-color: red
+}
+
+select { width: 400px; text-align-last:center; }
+
+.dataframe.table>td {
+    margin: 0px auto;
+    width: 100%;
+}
+
+
+</style>
+
+
+
+<body onload="tax_year()">
+  <input type="hidden" value='{{contracts|tojson|safe}}' id="original_record">
+  <div style="display: none;"> 
+    <table id="cloner">
+      <tr>
+        <td><input type="text" class="form-control" placeholder="evening hell" name="rule_name"></td>
+        <td><input type="text" class="form-control" placeholder="floating decimal or whole number" name="rate"></td>
+        <td>
+          <select class="form-control text-center" size="1" name="start_times" >
+            <option selected disabled>Start time</option>
+            {% for time in times[:-1]%}
+              <option value='{{time}}'>{{time}}:00</option>
+            {% endfor %}
+          </select>
+        </td>
+        <td> 
+          <select class="form-control text-center" size="1" name="end_times">
+            <option selected disabled>End time</option>
+            {% for time in times[1:]%}
+              <option value='{{time}}'>{{time}}:00</option>
+            {% endfor %}
+           
+          </select>
+        </td>
+        <td style="height: 100%;">
+         <div class="dropdown col-3 text-center" style="display: inline; padding: 0px;">
+            <button class="btn btn-link" style="text-decoration: none; width: 100%;"  type="button" data-bs-toggle="dropdown">Select days</button>
+            <input type="hidden" name="days_arr">
+            <ul class="dropdown-menu" style="width: 70%;">
+              <li class="dropdown_check"><input class="form-check-input" type="checkbox" value="0"> Monday</li>
+              <li class="dropdown_check"><input class="form-check-input" type="checkbox" value="1"> Tuesday</li>
+              <li class="dropdown_check"><input class="form-check-input" type="checkbox" value="2"> Wednesday</li>
+              <li class="dropdown_check"><input class="form-check-input" type="checkbox" value="3"> Thursday</li>
+              <li class="dropdown_check"><input class="form-check-input" type="checkbox" value="4"> Friday</li>
+              <li class="dropdown_check"><input class="form-check-input" type="checkbox" value="5"> Saturday</li>  
+              <li class="dropdown_check"><input class="form-check-input" type="checkbox" value="6"> Sunday</li>  
+            </ul>
+          </div>
+        </td>
+      </tr>
+    </table>
+    <div id="clone_to_contract"> 
+      <table>
+        <tbody>
+          <tr style="height: 45px;" >
+            <td style="width: 5%;"></td>
+            <td style="width: 20%;"><input type="text" name="sup_name" placeholder="name" class="form-control" style="text-align: center; padding: 0px;" ></td>
+            <td style="width: 10%;"><input type="text" name="rate" placeholder="rate" class="form-control" style="text-align: center; padding: 0px;"></td>
+            <td style="width: 10%;">
+              <select class="form-control text-center" size="1" name="start_times" style="padding: 0px;">
+                <option selected disabled>Start</option>
+                {% for time in times[:-1]%}
+                  <option value='{{time}}'>{{time}}:00</option>
+                {% endfor %}
+              </select>
+            </td>
+            <td style="width: 10%;">
+              <select class="form-control text-center" size="1" name="end_times"  style="padding: 0px;">
+                <option selected disabled>End</option>
+                {% for time in times[1:]%}
+                  <option value='{{time}}'>{{time}}:00</option>
+                {% endfor %}
+               
+              </select>
+            
+            </td>
+            <td style="width: 40%;">
+              <div class="dropdown col-3 text-center" style="display: inline; ">
+                <button class="btn btn-link" style="text-decoration: none; width: 100%; padding: 1px;"  type="button" data-bs-toggle="dropdown">Select days</button>
+                <input name="which" type="hidden">
+                <ul class="dropdown-menu" style="width: 70%;">
+                  <li class="dropdown_add"><input class="form-check-input" type="checkbox" value="0"> Mon</li>
+                  <li class="dropdown_add"><input class="form-check-input" type="checkbox" value="1"> Tue</li>
+                  <li class="dropdown_add"><input class="form-check-input" type="checkbox" value="2"> Wed</li>
+                  <li class="dropdown_add"><input class="form-check-input" type="checkbox" value="3"> Thur</li>
+                  <li class="dropdown_add"><input class="form-check-input" type="checkbox" value="4"> Fri</li>
+                  <li class="dropdown_add"><input class="form-check-input" type="checkbox" value="5"> Sat</li>  
+                  <li class="dropdown_add"><input class="form-check-input" type="checkbox" value="6"> Sun</li>  
+                </ul>
+              </div>
+            </td>
+            <td style="width: 5%;"><button class="btn btn-link" name="save_appended" style="color: green; padding: 0px;">&#10003;</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+   
+  </div>
+  
+<!-- Modal for settings-->
+{% if contracts %}
+<h2>Google Calendar Wage Tracker</h2>
+<div class="modal fade" id="settings" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" style="max-width: 1000px;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Settings</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="cancel_changes"></button>
+        <!--<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>-->
+      </div>
+       <!--modal for sub-->
+      <div class="modal-body">
+          <form  id="calendar_get_year" method="POST" style="margin:0px;width:100%;" >
+          <p><strong>Collect tax year from Google Calendar: </strong></p>
+          <div class="row" style="padding-bottom: 20px;">
+            <div class="col-4">
+              <select class="form-select col-6" aria-label="Default select example" name="search_parameter">
+                <option selected>contract</option>
+                {% for contract in contracts%}
+                <option value="{{contract['employer']}}" >{{contract['employer']}}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-4">
+              <select class="form-select col-6" aria-label="Default select example" name="year" style="display: none;">
+                <option selected>year</option>
+              </select>
+            </div>
+            <div class="col-4">
+              <button class="btn btn-primary" type="submit" id="calendar_parser" style="display: none;">parse!</button>
+            </div>
+          </div>
+        </form>
+          <div class="row" style="padding-top: 20px;">
+            <p>The tax year considers payments which are received for the current year. If your employer pays a month in advance, then the working hours collected range from December of the previous year to the end of November of the current year.</p> 
+            <p>Duplicate entries of events are not allowed, and the current month ({{now.strftime('%B, %Y')}}) is not parsed since shift changes in the current working month are common.</p>
+            <p>Parsing the current year does not insert values of the current month to the database. Navigating to a past work month which was not parsed here, is automatically inserted into the database!</p>
+          </div>
+         
+            <p><strong>Existing contracts:</strong></p>
+            <p>You may edit the values below from the table. Please note that altering the name of the employer will make the app search for that value (you might have a empty table!).</p>
+            <p>Click on the X in the top right corner to cancel added changes.</p>
+            <br>
+            {% set week_dict = {'0':'Mon','1':'Tue','2':'Wed','3':'Thur','4':'Fri','5':'Sat','6':'Sun'} %}
+            <div id="settings_body"> 
+            {% for contract in contracts%}
+            
+            <div class="row">
+            <div class="card" style="width: 80%;" id="{{contract['contract_id']}}">
+              <!--
+              <div class="card-header" style="text-align: center;">
+                <h5 class="card-title"><button type="button" class="btn btn-light" name="edit_contract"><strong>{{contract['employer']}}</strong></button></h5>
+              </div>
+              -->
+
+               
+              <div class="card-header" style="text-align: center; padding-left: 0px; padding-right: 0px;">
+                <table style="width: 100%; background-color:#f8f9fa;">
+                  <tr>
+                    <td style="width: 5%;"> <button class="btn btn-link in_edit" style="color:red;" name="del_employer">x</button> </td>
+                    <td style="width: 90%;"> 
+                      <h5 class="card-title">
+                        <button type="button" class="btn btn-light" name="edit_contract"><strong>{{contract['employer']}}</strong></button>
+                      </h5>
+                    </td>
+                    <td style="width: 5%;"> <button class="btn btn-link in_edit" name="edit_employer">&#x270E;</button> </td>
+                  </tr>
+                </table>
+              </div>
+              <ul class="list-group list-group-flush">
+                <table class="table" style="margin-bottom: 0px;">
+                  <tbody>
+                    <tr>
+                      <th>Monthly pay offset</th>
+                      <th>Hourly rate</th>
+                    </tr>
+                    <tr style=" height: 45px;" name="contract_header">
+                      <td style="width: 50%;">{{contract['paydate_month_offset']}}</td>
+                      <td style="width: 50%;">{{contract['base']}}</td>            
+                    </tr>
+                  </tbody>
+                </table>
+                <li class="list-group-item" style="text-align: center; background-color: rgba(0,0,0,.03); height: 40px;">
+                  <button class="btn btn-link in_edit" style="color: red; width: 10px;" name="del_supplement_new">-</button>
+                    <strong>supplements</strong>
+                  <button class="btn btn-link in_edit" style="color: blue; width: 10px;" name="append_supplement_new">+</button>
+                </li>
+                <table class="table">
+                <tbody name="customize_supplements">
+                {% if contract['supplements']%}
+                
+                 
+                  <tr>
+                    <th></th>
+                    <th>name</th>
+                    <th>rate</th>
+                    <th>start</th>
+                    <th>end</th>
+                    <th>days</th>
+                    <th></th>
+                  </tr> 
+                  {% for supp in contract['supplements']%}
+                  <tr id="{{supp[1]}}" style=" height: 45px;">
+                    <td style="width: 5%;"><button class="btn btn-link in_edit" style="padding: 0px;color:red;" name="del_existing_supplement">x</button></td>
+                    <td style="width: 20%;">{{supp[2]}}</td>
+                    <td style="width: 10%;">{{supp[3]}}</td>
+                    <td style="width: 10%;">{{supp[4]}}:00</td>
+                    <td style="width: 10%;">{{supp[5]}}:00</td>
+                    <td style="width: 40%;">
+                      {%- for day in (supp[6]|replace('[','')|replace(']','')).split(',') -%}
+                        {% if loop.index == (supp[6]|replace('[','')|replace(']','')).split(',')|length %}
+                          {{week_dict[day]}}
+                        {% else %}
+                          {{week_dict[day]+','}} 
+                        {% endif %}
+                      {%- endfor -%}
+                    </td>
+                    <td style="width: 5%;"><button class="btn btn-link in_edit" style="padding: 0px;" name="edit_existing_supplement">&#x270E;</button></td>
+                  </tr>
+                  {% endfor %}
+                
+                {% endif %}
+              </tbody>
+            </table>
+              </ul>
+            </div>
+           
+          </div>
+       
+        
+            {% endfor %}
+          </div>
+            <div  role="alert" id="edit_message" type='hidden' class="alert" style="text-align: center;">
+              <br>
+            </div>
+            <div class="row">
+              <div class="col text-center">
+                <button id="save_changes" type="button" class="btn btn-lg btn-primary" disabled>Save Changes</button>
+              </div>
+            </div>
+      </div>
+    </div>
+  </div>
+  <br>
+</div>
+{% endif %}
+
+  <!-- Modal for new contract-->
+  <div class="modal fade" id="new_contract" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true" >
+    <div class="modal-dialog" style="max-width: 1000px;">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">Create new contract</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          <!--<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>-->
+        </div>
+        <div class="modal-body">
+          <form style="margin:0px;width:100%;" method="POST" name="new_contract">
+              <div class="row">
+                <div class="col-4" >
+                  <p>Employer</p>
+                  <input class="form-control" placeholder="ruffryderz LLC" name="employer">
+                </div>
+                <div class="col-4">
+                  <p>How far in advance are you paid?</p>
+                  <select class="form-select" aria-label="Default select example" name="paydate_month_offset">
+                    <option selected>choose month offset</option>
+                    <option value="0">0 (same month)</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                  </select>
+                </div>
+              </div>
+             
+              <br>
+              <div class="row" style="display: none;" id="paymet_rules">
+                <p>Hourly pay:</p>
+                <div class="col-4">
+                  <div class="input-group">
+                    <input type="text" class="form-control" placeholder="floating decimal (11.90) or whole number (11)" name="base">
+                  </div>
+                </div>
+                <div class="col-3" id="add_supplement" style="display: none;">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="">
+                    <label class="form-check-label">
+                      Add supplements
+                    </label>
+                  </div>
+                </div>
+                <div class="col-4" id="add_google_years" style="display: none;">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="">
+                    <label class="form-check-label">
+                      Collect Google Calendar data
+                    </label>
+                  </div>
+                </div>
+              </div>
+              <br >
+              <div id="supplement_table" class="row" style="display: none;" >
+                <p>Supplement table:</p>
+                <div class="col-10">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Name</th>
+                        <th scope="col">Rate</th>
+                        <th scope="col">Start</th>
+                        <th scope="col">End</th>
+                        <th scope="col">Days</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="col-1" > 
+                  <button class="btn btn-success" id="add_row" title="add row">+</button>
+                </div>
+                <div class="col-1"> 
+                  <button class="btn btn-warning" id="del_row" title="delete last row">-</button>
+                </div>
+              </div>
+             
+              <div class="row" style="display: none;" id="new_contract_years">
+              <p>Select years to collect from Google Calendar. You can update the information later.</p>
+                <div class="col-8">
+                  <select multiple class="form-control" size="3" id="parse_years" name="parse_years">
+                    <option value="2019">2019</option>
+                    <option value="2020">2020</option>
+                    <option value="2021">2021</option>
+                  </select>
+                </div>
+              </div>
+              <br>
+              <button class="btn btn-primary" id="create_contract" style="display: none;">Ready!</button>
+            </form>
+            <br>
+            <div id="message" style="display: none;" class="alert alert-warning">
+
+            </div>
+            <div id="ajax_message" style="display: none;" class="alert alert-success">
+
+            </div>
+            
+        </div>
+       
+      </div>
+    </div>
+  </div>
+  <div class="container" style="text-align: center;margin-top: 20px;">
+    <div class="row " style="background-color: white;">
+      <div class="col-8" id="highchart_tab">
+        <ul class="nav nav-tabs" >
+          <li class="nav-item">
+            <button class="nav-link active" id="pay_year_month" data-bs-toggle="tab"  type="button" role="tab" >pay: year, month</button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" id="pay_years" data-bs-toggle="tab" type="button" role="tab" >pay: years</button>
+          </li>
+          {% if perc%}
+          <li class="nav-item">
+            <button class="nav-link" id="sup_year_month" data-bs-toggle="tab"role="tab" >hours: year, month </button>
+          </li>
+          {% endif %}
+         <!-- 
+           <li class="nav-item">
+            <button class="nav-link" id="sup_year_month" data-bs-toggle="tab"role="tab" >hours: year, month </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" id="sup_years" data-bs-toggle="tab"role="tab" >hours: years</button>
+          </li>
+        -->
+        </ul>
+      </div>
+      <div class="dropdown col-4 border-bottom">
+        {% if contracts %}
+        <button class="btn btn-link dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+          Options
+        </button>
+        <ul class="dropdown-menu " aria-labelledby="dropdownMenuButton1" >
+          <li><button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#new_contract">
+            add contract
+          </button></li>
+        
+          <li><button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#settings">
+        settings
+      </button></li>
+      
+      
+        </ul>
+        {% endif %}
+      </div>
+      <br >
+  
+  </div>
+ 
+  </div>
+ 
+  
+  <div id="highchart" style="width: 100%;height: 100%;">
+    
+
+
+
+  {% if spline %}
+    <input type='hidden' id='spline' data-spline='{{spline|tojson|safe}}' />
+  {% endif %}
+  {% if perc%}
+  <input type='hidden' id='perc' data-perc='{{perc|tojson}}' />
+  {% endif %}
+  </div>
+  {% if message %}
+  <div class="alert alert-success" style="margin-top: 20px;">
+    {{message}}
+  </div>
+  {% endif %}
+  {% for year in tax_years_frame %}
+  <div >
+    {{year|safe}}
+  </div>
+  {% endfor %}
+
+
+
+
+
+
+  {{exam|safe}}
+
+
+</body>
+{% endblock %}

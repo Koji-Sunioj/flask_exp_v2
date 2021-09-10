@@ -1,0 +1,115 @@
+{% extends "layout.html" %}
+<style>
+ form.border {width: 70%; padding: 20px; margin:auto; background-color:#f5f5f5;opacity: 50%;}
+ .form-control:focus {
+    outline: none !important;
+    border:1px solid red;
+    box-shadow: 0 0 10px #719ECE;
+}
+ hr {margin: 5px;}
+</style>
+{% block content %}
+<body onload="thread()">
+
+<div class="row"  style="width: 70%; margin:auto; margin-top: 20px; padding: 0px; ">
+   <div class="card" style="margin: 0px;">
+      <div class="card-body">
+         <img class="card-img-top"  id="author_avatar" src="{{ url_for('static', filename='storage/'+thread['author']) }}" onerror="this.src='/static/storage/default_avatar.png'"  style="width: 100px; width: 100px;border-radius: 50%;">
+         <p class="card-subtitle mb-2 text-muted">{{thread['author']}} {{thread['stamp']|render_ago}}</p>
+         <h5 class="card-title">{{thread['title']}}</h5>
+         <p class="card-text">{{thread['post']}}</p>
+      </div>
+   </div>
+</div>
+
+{% if replies %}
+{% for reply in replies %}
+
+<div class="row" style="width: 70%; margin:auto; padding: 0px;">
+ 
+  
+   <div class="card" style="margin: 0px;"> 
+     
+      <ul  style="list-style-type:none;">
+         <li>
+      <div class="row" style=" padding: 0px;">
+          <div class="card-body col-9 " >
+            <p class="card-subtitle mb-2 text-muted">{{reply[2]}} {{reply[4]|render_ago}}</p>
+        
+            {% if reply[2] == session['username'] %}  
+            <form method="POST" action="http://localhost:5000/forum/thread/{{thread['id']}}/" name="submit">
+                <p  class="card-title" contenteditable="true">  {{reply[3]}}</p >
+            </form>
+            {% else %}
+                <p  class="card-title" >  {{reply[3]}}</p >
+            {% endif %}
+         </div>
+         <div class="col-3" style="text-align: right;">
+            <p>{% if reply_reply[reply[0]]|length != 0 %} {{reply_reply[reply[0]]|length}} comments {% endif %}
+               <button class="btn btn-link" style=" text-decoration: none; font-size: 20px; transform: rotate(90deg); box-shadow: none;" type="button" data-toggle="collapse" data-target="#collapseExample-{{reply[0]}}" aria-expanded="false" aria-controls="collapseExample-{{reply[0]}}">&#8227;</button>
+            </p>
+         </div>
+      </div>
+      <div class="collapse" id="collapseExample-{{reply[0]}}" >
+      {% if reply_reply %}       
+      {% if  reply[0]  in reply_reply %}
+         <ul style="list-style-type:none;">
+         {% for comments in reply_reply[reply[0]] %} 
+            <hr>
+               <li >
+                  <div>
+                     <p class="card-subtitle mb-2 text-muted"> {{comments['username']}} told {{reply[2]}} {{comments['stamp']|render_ago}}</p>
+                     <p class="card-title">{{comments['reply']}}</p>
+                  </div>
+               </li>
+         {% endfor %}
+         </ul>
+      {% endif %}
+      {% endif %}
+         <ul style="list-style-type:none;">
+            <hr >
+            <li> 
+               <div class="row">
+                
+                
+                  <div id = "{{reply[0]}}" >
+                  
+                     <form  method="POST" action="http://localhost:5000/forum/thread/{{thread['id']}}/"  name="submit"  >
+                        <div class="input-group mb-3">
+                           <input type = "text" name = "reply_to_replier" class="form-control"  placeholder="write comment!" style="background-color: #f2f2f2;">
+                           <input type = "hidden" name = "session_to_replier" value="{{session['username']}}" >
+                           <input type = "hidden" name = "reply_to_reply_id" value = "{{reply[0]}}" >
+                         
+                        </div>
+                     </form> 
+                  </div>
+               </div>
+            </li>
+         </ul>
+      </div>
+   </li>
+
+</ul>
+   </div> 
+
+</div>
+
+
+
+{% endfor %}
+{% endif %}
+<form  method="POST" action="http://localhost:5000/forum/thread/{{thread['id']}}/"  class="border" name="submit" style="width: 70%; padding: 20px; margin:auto; background-color:#f5f5f5"padding>
+   <div class="input-group mb-3" >
+      <input type = "text" name = "reply" class="form-control" placeholder="Speak your mind">
+     
+      <input type="hidden" name="username" value="{{session['username']}}">
+      <input type="hidden" name="thread_id" value="{{thread['id']}}">
+   </div>
+</form>
+{% if error_message %}
+   <div class="col-4 offset-4" style="margin-top: 20px;">
+      <p class="alert alert-warning" role="alert">{{error_message}}</p>
+   </div>
+{% endif %} 
+</body>
+{% endblock %} 

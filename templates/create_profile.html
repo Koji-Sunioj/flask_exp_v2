@@ -1,0 +1,24 @@
+{% extends "layout.html" %}
+{% block content %}
+ <body onload="create_profile()">
+  <h2 >Create user profile</h2>
+   <form  method="POST" class="border" name="submit" id="create_profile_form">
+      <div class="form-group">
+         <input class="form-control" placeholder="username" name="username">
+         <br>
+         <input class="form-control" placeholder="email" name="email">
+         <br>
+         <input class="form-control" placeholder="hometown" name="home_town">
+         <br>
+         <input class="form-control" type="password" placeholder="password" name="password">
+         <br>
+         <input class="form-control" type="password" placeholder="confirm password" name="password_confirm">
+         <br>
+      </div>
+      <button class="btn btn-primary">Submit</button>
+   </form>
+   <br>
+   <div class="alert alert-warning" role="alert" id="create_error" style="display: none;">
+    </div> 
+</body>
+{% endblock %}  

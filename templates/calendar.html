@@ -1,0 +1,276 @@
+{% extends "layout.html" %}
+{% block content %}
+<style>
+td.col_value
+{width: 200px;height: 180px;}
+li {font-size: 15px;}
+ul {text-align: left; padding-left: 20px; margin-bottom: 5px;}
+span {margin: 0px;padding: 0px;}
+</style>
+<body onload="calendar()">
+
+<div class="row">
+  <!-- Modal -->
+  <div class="modal fade" id="todo" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"></h5>
+        
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="modal_full_text">
+          <ul>
+          </ul>
+          <input type="hidden" id="edit_cal_id">
+            <div class="mb-3">
+              <br>
+              <button type="submit" class="btn btn-primary" id="new_task">Create new task</button>
+            </div>
+            <div class="mb-3 form_initiated" style="display: none;">
+              <select class="form-select"  name="category"style="margin-top: 20px;">
+                <option selected disabled>task type</option>
+                {% if employers %}
+                <option value="work">work</option>
+                {% endif %}
+                <option value="fun">fun</option>
+                <option value="errand">errand</option>
+              </select>
+              {% if employers %}
+              <select class="form-select"  name="employer"style="margin-top: 20px; display: none;">
+                <option selected disabled>employer</option>
+                {% for employer in employers %}    
+                <option value="{{employer}}">{{employer}}</option>
+                {% endfor %}
+              </select>
+              {% endif %}
+              <input class="form-control"  placeholder="chilling in män-tsälä like a real män" name="title" style="margin-top: 20px;"></textarea>
+            </div>
+         
+            <div class="form-check form_initiated" style="display: none;">
+              <label class="form-check-label" for="exampleCheck1">All Day</label>  
+              <input type="checkbox" class="form-check-input" checked id="is_all">
+            </div>
+            <div class="row" id="times" style="display: none;">
+              <div class="col-4">
+                <select class="form-select" aria-label="Default select example" style="margin-top: 20px;" id="fromtime" (change)="changeFromTime($event.target.value)">
+                   <option selected disabled>Start time</option>
+                   {% for time in times[:-1] %}
+                   <option value="{{time}}" >{{time}}:00</option>
+                   {% endfor %}
+                </select>
+             </div>
+             <div class="col-4">
+                <select class="form-select" aria-label="Default select example" style="margin-top: 20px;" id="totime">
+                  <option selected disabled>End time</option>
+                  {% for time in times[1:] %}
+                  {% if time == 24 %}
+                    <option value="24" class="to_time">00:00</option>
+                  {% else %}
+                    <option value="{{time}}" class="to_time">{{time}}:00</option>
+                  {% endif %}
+                  {% endfor %}
+                </select>
+             </div>
+            </div>
+            <div class="mb-3 form_initiated" style="display: none;">
+              <br>
+              <button type="submit" class="btn btn-primary" id="send_task" disabled>Submit</button>
+              
+            </div>
+            <div class="alert" style="display:none;" id="modal_message">
+
+            </div>
+           
+        </div>
+        <!-- 
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary">Save changes</button>
+        </div>-->
+      </div>
+    </div>
+  </div>
+
+  <div class="col-4" >
+    <h1>
+      <a class="calendar_shift"  href="{{ url_for('home_calendar',date=prev_month.strftime('%Y-%m'))}}">&#9666;</a>
+    </h1>
+  </div>
+  <div class="col-4">
+    <h1 id='calendar_focus'>{{title}}</h1>
+  </div>
+  <div class="col-4" >
+    <h1>
+      <a class="calendar_shift" href="{{ url_for('home_calendar',date=next_month.strftime('%Y-%m'))}}" >&#9656;</a>
+    </h1>
+  </div>
+</div>
+<table class="table table-bordered" id="calendar">
+  <tr>
+    {% for col in framer.columns %}    
+    <th scope="col">{{col}}</th>  
+    {% endfor %}
+  </tr> 
+{% for i in framer.values %}    
+  <tr>
+    <td >
+    <button style="padding: 0; border-width: 0; text-align: center;"></button><strong>{{i[0]}}</strong>
+    </td>  
+    <td class="col_value">
+      {% if i[1]|string|length > 19%}
+        <input  type="hidden"value="{{i[1]['date'].strftime('%Y-%m-%d')}}"  name="date">
+         <a href="#"  data-bs-toggle="modal" data-bs-target="#todo">{{i[1]['date'].strftime('%d')|int}} </a>
+          <ul>
+            {% for value in i[1]['data'].items() %}
+              {% if value[1]['start_time'].strftime('%H') == '00' and value[1]['end_time'].strftime('%H') == '00'%}
+                <li  cal_id ="{{value[0]}}" full ="{{value[1]['title']}}" class="{{value[1]['category']}}">{{value[1]['title']|truncate(9, False, '', 0)}}: all day</li>
+              {% else %}
+                <li  cal_id ="{{value[0]}}"  full ="{{value[1]['title']}}" class="{{value[1]['category']}}">{{value[1]['title']|truncate(9, False, '', 0)}}: {{value[1]['start_time'].strftime('%H')}} - {{value[1]['end_time'].strftime('%H:%M')}}</li>
+              {% endif %}
+            {% endfor %}
+          </ul>
+        <span class="someClass"></span>
+       
+      {% else %}
+      <input  type="hidden"value="{{i[1].strftime('%Y-%m-%d')}}"  name="date">
+      <a href="#"  data-bs-toggle="modal" data-bs-target="#todo">{{i[1].strftime('%d')|int}}</a>
+      {% endif %}
+    </td> 
+    <td class="col_value">
+      {% if i[2]|string|length > 19%}
+        <input  type="hidden"value="{{i[2]['date'].strftime('%Y-%m-%d')}}"  name="date">
+         <a href="#"  data-bs-toggle="modal" data-bs-target="#todo">{{i[2]['date'].strftime('%d')|int}} </a>
+         <ul>
+          {% for value in i[2]['data'].items() %}
+            {% if value[1]['start_time'].strftime('%H') == '00' and value[1]['end_time'].strftime('%H') == '00'%}
+              <li  cal_id ="{{value[0]}}" full ="{{value[1]['title']}}" class="{{value[1]['category']}}">{{value[1]['title']|truncate(9, False, '', 0)}}: all day</li>
+            {% else %}
+              <li  cal_id ="{{value[0]}}"  full ="{{value[1]['title']}}" class="{{value[1]['category']}}">{{value[1]['title']|truncate(9, False, '', 0)}}: {{value[1]['start_time'].strftime('%H')}} - {{value[1]['end_time'].strftime('%H:%M')}}</li>
+            {% endif %}
+          {% endfor %}
+        </ul>
+      {% else %}
+      <input  type="hidden"value="{{i[2].strftime('%Y-%m-%d')}}"  name="date">
+      <a href="#"  data-bs-toggle="modal" data-bs-target="#todo">{{i[2].strftime('%d')|int}}</a>
+      {% endif %}
+    </td> 
+    <td class="col_value">
+      {% if i[3]|string|length > 19%}
+        <input  type="hidden"value="{{i[3]['date'].strftime('%Y-%m-%d')}}"  name="date">
+         <a href="#"  data-bs-toggle="modal" data-bs-target="#todo">{{i[3]['date'].strftime('%d')|int}} </a>
+         <ul>
+          {% for value in i[3]['data'].items() %}
+            {% if value[1]['start_time'].strftime('%H') == '00' and value[1]['end_time'].strftime('%H') == '00'%}
+              <li  cal_id ="{{value[0]}}" full ="{{value[1]['title']}}" class="{{value[1]['category']}}">{{value[1]['title']|truncate(9, False, '', 0)}}: all day</li>
+            {% else %}
+              <li  cal_id ="{{value[0]}}"  full ="{{value[1]['title']}}" class="{{value[1]['category']}}">{{value[1]['title']|truncate(9, False, '', 0)}}: {{value[1]['start_time'].strftime('%H')}} - {{value[1]['end_time'].strftime('%H:%M')}}</li>
+            {% endif %}
+          {% endfor %}
+        </ul>
+      
+       
+      {% else %}
+      <input  type="hidden"value="{{i[3].strftime('%Y-%m-%d')}}"  name="date">
+      <a href="#"  data-bs-toggle="modal" data-bs-target="#todo">{{i[3].strftime('%d')|int}}</a>
+   
+      {% endif %}
+    </td> 
+    <td class="col_value">
+      {% if i[4]|string|length > 19%}
+        <input  type="hidden"value="{{i[4]['date'].strftime('%Y-%m-%d')}}"  name="date">
+         <a href="#"  data-bs-toggle="modal" data-bs-target="#todo">{{i[4]['date'].strftime('%d')|int}} </a>
+         <ul>
+          {% for value in i[4]['data'].items() %}
+            {% if value[1]['start_time'].strftime('%H') == '00' and value[1]['end_time'].strftime('%H') == '00'%}
+              <li  cal_id ="{{value[0]}}" full ="{{value[1]['title']}}" class="{{value[1]['category']}}">{{value[1]['title']|truncate(9, False, '', 0)}}: all day</li>
+            {% else %}
+              <li  cal_id ="{{value[0]}}"  full ="{{value[1]['title']}}" class="{{value[1]['category']}}">{{value[1]['title']|truncate(9, False, '', 0)}}: {{value[1]['start_time'].strftime('%H')}} - {{value[1]['end_time'].strftime('%H:%M')}}</li>
+            {% endif %}
+          {% endfor %}
+        </ul>
+       
+      {% else %}
+      <input  type="hidden"value="{{i[4].strftime('%Y-%m-%d')}}"  name="date">
+      <a href="#"  data-bs-toggle="modal" data-bs-target="#todo">{{i[4].strftime('%d')|int}}</a>
+   
+      {% endif %}
+    </td> 
+    <td class="col_value">
+      {% if i[5]|string|length > 19%}
+        <input  type="hidden"value="{{i[5]['date'].strftime('%Y-%m-%d')}}"  name="date">
+         <a href="#"  data-bs-toggle="modal" data-bs-target="#todo">{{i[5]['date'].strftime('%d')|int}} </a>
+         <ul>
+          {% for value in i[5]['data'].items() %}
+            {% if value[1]['start_time'].strftime('%H') == '00' and value[1]['end_time'].strftime('%H') == '00'%}
+              <li  cal_id ="{{value[0]}}" full ="{{value[1]['title']}}" class="{{value[1]['category']}}">{{value[1]['title']|truncate(9, False, '', 0)}}: all day</li>
+            {% else %}
+              <li  cal_id ="{{value[0]}}"  full ="{{value[1]['title']}}" class="{{value[1]['category']}}">{{value[1]['title']|truncate(9, False, '', 0)}}: {{value[1]['start_time'].strftime('%H')}} - {{value[1]['end_time'].strftime('%H:%M')}}</li>
+            {% endif %}
+          {% endfor %}
+        </ul>
+       
+     
+       
+      {% else %}
+      <input  type="hidden"value="{{i[5].strftime('%Y-%m-%d')}}"  name="date">
+      <a href="#"  data-bs-toggle="modal" data-bs-target="#todo">{{i[5].strftime('%d')|int}}</a>
+   
+      {% endif %}
+    </td> 
+    <td class="col_value">
+      {% if i[6]|string|length > 19%}
+        <input  type="hidden"value="{{i[6]['date'].strftime('%Y-%m-%d')}}"  name="date">
+         <a href="#"  data-bs-toggle="modal" data-bs-target="#todo">{{i[6]['date'].strftime('%d')|int}} </a>
+         <ul>
+          {% for value in i[6]['data'].items() %}
+            {% if value[1]['start_time'].strftime('%H') == '00' and value[1]['end_time'].strftime('%H') == '00'%}
+              <li  cal_id ="{{value[0]}}" full ="{{value[1]['title']}}" class="{{value[1]['category']}}">{{value[1]['title']|truncate(9, False, '', 0)}}: all day</li>
+            {% else %}
+              <li  cal_id ="{{value[0]}}"  full ="{{value[1]['title']}}" class="{{value[1]['category']}}">{{value[1]['title']|truncate(9, False, '', 0)}}: {{value[1]['start_time'].strftime('%H')}} - {{value[1]['end_time'].strftime('%H:%M')}}</li>
+            {% endif %}
+          {% endfor %}
+        </ul>
+       
+     
+       
+      {% else %}
+      <input  type="hidden"value="{{i[6].strftime('%Y-%m-%d')}}"  name="date">
+      <a href="#"  data-bs-toggle="modal" data-bs-target="#todo">{{i[6].strftime('%d')|int}}</a>
+   
+      {% endif %}
+    </td> 
+    <td class="col_value">
+      {% if i[7]|string|length > 19%}
+        <input  type="hidden"value="{{i[7]['date'].strftime('%Y-%m-%d')}}"  name="date">
+         <a href="#"  data-bs-toggle="modal" data-bs-target="#todo">{{i[7]['date'].strftime('%d')|int}} </a>
+         <ul>
+          {% for value in i[7]['data'].items() %}
+            {% if value[1]['start_time'].strftime('%H') == '00' and value[1]['end_time'].strftime('%H') == '00'%}
+              <li  cal_id ="{{value[0]}}" full ="{{value[1]['title']}}" class="{{value[1]['category']}}">{{value[1]['title']|truncate(9, False, '', 0)}}: all day</li>
+            {% else %}
+              <li  cal_id ="{{value[0]}}"  full ="{{value[1]['title']}}" class="{{value[1]['category']}}">{{value[1]['title']|truncate(9, False, '', 0)}}: {{value[1]['start_time'].strftime('%H')}} - {{value[1]['end_time'].strftime('%H:%M')}}</li>
+            {% endif %}
+          {% endfor %}
+        </ul>
+       
+       
+       
+      {% else %}
+      <input  type="hidden"value="{{i[7].strftime('%Y-%m-%d')}}"  name="date">
+      <a href="#"  data-bs-toggle="modal" data-bs-target="#todo">{{i[7].strftime('%d')|int}}</a>
+   
+      {% endif %}
+    </td> 
+  </tr>
+{% endfor %}
+</table>
+{{framer['data']}}
+
+{% if message  %}
+  <div class="col-4 offset-4" style="margin-top: 20px;">
+    <p class="alert alert-success" role="alert">{{message}}</p>
+  </div>
+{% endif%}  
+</body>
+{% endblock %}  

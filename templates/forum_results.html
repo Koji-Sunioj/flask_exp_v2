@@ -1,0 +1,145 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<div class="modal fade" id="myModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">make a post bitch</h4>
+      </div>
+      <div class="modal-body">
+        <form name="modal" method="post">
+          <div class="form-group">
+            <label>title</label>
+            <input class="form-control" type="text" placeholder="your shitty title here" name="title">
+          </div>
+          <div class="form-group">
+            <label>post</label>
+            <textarea class="form-control"  rows="3" placeholder="Taking over saturated selfies in Finnish forests" name="post"></textarea>
+            <div class="row">
+              <div class="btn-group col-6" role="group" aria-label="Basic example">
+                <button id="new_post" class="btn btn-primary" style="margin-top: 20px;">Submit</button>
+              </div>
+              <div class="btn-group col-6" role="group" aria-label="Basic example">
+                <button id="cancel_edit" class="btn btn-primary" style="margin-top: 20px;">Cancel</button> 
+              </div>
+            </div>
+            <div  style="display: none; margin-top: 20px;" id="modal_error" class="alert alert-warning">
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row"  style="padding-top: 20px;">
+
+
+  <div class="col-4 offset-4"> 
+    <form  method = "post" name="search"> 
+      <div class="input-group mb-3" >
+        <button class="btn btn-primary" type="submit">search!</button>
+        <input type = "text" name = "query" class="form-control" placeholder='results for "{{query}}"' >
+        <a class="btn btn-primary" role="button" href="{{ url_for('forum',page=1) }}">clear</a>
+      </div>
+      
+    </form>
+  </div>
+  
+  <div class="col-4" >
+   
+    <button class="btn btn-primary " id="show_me" style="float: right;">make a post</button>
+  </div>
+  </div>
+<body onload="search_check()"> 
+<div class="table-responsive" style="padding-top:20px;overflow: visible;">
+    <table class="table table-border mb-0">
+        <thead >
+            <tr>
+                <th>
+                  <form method="post" name="sort_title">
+                    <input type="hidden" value="title" name="title">
+                    <input type="hidden" value="{{last}}" name="last">
+                    <button class="btn btn-link" role="link" type="submit">title</button>
+                  </form>
+                </th>
+                <th>
+                  <form method="post">
+                    <input type="hidden" value="username" name="username">
+                    <input type="hidden" value="{{last}}" name="last">
+                    <button class="btn btn-link" role="link" type="submit">username</button>
+                  </form>
+                </th>
+              
+                <th>
+                  <form method="post">
+                    <input type="hidden" value="stamp" name="stamp">
+                    <input type="hidden" value="{{last}}" name="last">
+                    <button class="btn btn-link" role="link" type="submit">stamp</button>
+                  </form>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+          <tbody>
+            {% for post in new_table.values %}
+            <tr class="data_table">
+              <td style="width: 33%;"><a href="{{ url_for('forum_thread',thread=post[0])}}" style="text-decoration: none;color: black;"><strong>{{post[1]}}</strong></a></td>
+              <td style="width: 33%;">{{ post[-1] }}</td>
+              <td style="width: 33%;">
+              {% if session['username'] == post[-1] %}
+                  <div class="row" style="width: 100%;">
+                    <div class="col-9" style="text-align: right; ">
+                      <p style="display: inline;"> {{post[3]}}</p>
+                      <input type="hidden" value="{{post[0]}}" name = "thread_id">
+                      <input type="hidden" value="{{post[2]}}" name = "post">
+                    </div>
+                    <div class="dropdown col-3 text-center" style="display: inline; padding: 0px;">
+                      <button class="btn btn-link dropdown-toggle" style="text-decoration: none;line-height: 50%; width: 100%;" id="dropdownMenuButton1" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                      </button>
+                      <ul class="dropdown-menu dropdown-edit_form" aria-labelledby="dropdownMenuButton1" id="dropdown" style="text-align: center;">
+                        <li ><a class="dropdown-item" href="#" name="edit">edit</a></li>
+                        <li ><a class="dropdown-item" href="#" name="delete">delete</a></li>
+                      </ul>
+                    </div>
+                  </div>
+                {% else %}
+                <div class="row" style="width: 100%;">
+                  <div class="col-9" style="text-align: right;">
+                    {{ post[3] }}
+                  </div>
+                </div>
+                {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+      </tbody>
+    </table>
+</div>
+</body>
+
+{% for page_number in pagination %} 
+  {% if current_page == page_number%}
+    <a>{{page_number}}</a>
+  {% else %}
+    {% if sort_key %}
+      <a href="{{ url_for('forum_results',query=query,page=page_number,sort_key=sort_key,ascending=ascending) }}">{{page_number}}</a>
+    {% else %}
+      <a href="{{ url_for('forum_results',query=query,page=page_number) }}">{{page_number}}</a>
+    {% endif %}
+  {% endif %}
+{% endfor %}
+<div class="alert alert-warning" id="query_message" style="display: none; width: 70%; margin: auto;">
+</div> 
+
+{% if post_removed %}
+  <div class="alert alert-success" style="width: 70%; margin: auto;">
+    {{post_removed}}
+  </div> 
+{% endif %}
+
+{% endblock %} 

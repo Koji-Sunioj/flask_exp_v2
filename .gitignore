@@ -1,0 +1,11 @@
+*.txt
+*.pkl
+*.pickle
+*.pyc
+*.ipynb
+unused code
+.ipynb_checkpoints
+flask-env
+__pycache__
+static/storage
+!requirements.txt
